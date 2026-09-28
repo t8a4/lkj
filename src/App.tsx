@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Play, Square, RotateCcw, Image as ImageIcon, 
   Settings2, Plus, Flag, Trash2, Rocket, Brush, X, Grid, Pencil, Monitor, Save, FolderOpen,
-  Menu, ExternalLink, Globe, MessageSquarePlus, Mail, BookOpen, Undo2, Redo2, Video, Copy
+  Undo2, Redo2, Copy
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Stage } from './components/Stage';
@@ -16,9 +16,6 @@ import { KidKeypad, KeypadMode } from './components/KidKeypad';
 import { TextEditorModal, FontSize, SceneText } from './components/TextEditorModal';
 import { RecordModal } from './components/RecordModal';
 import { SceneThumbnail } from './components/SceneThumbnail';
-import { ContactModal } from './components/ContactModal';
-import { VideoHelpModal } from './components/VideoHelpModal';
-import { VideoAdminModal } from './components/VideoAdminModal';
 import { cn } from './lib/utils';
 import { BlockType, BlockInstance, Stack, isTriggerBlock } from './blocks';
 import { DragState } from './dragState';
@@ -96,7 +93,6 @@ export default function App() {
     height: typeof window !== 'undefined' ? window.innerHeight : 768 
   });
   const [showMobileWarning, setShowMobileWarning] = useState(true);
-  const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
   const [armedDeleteCharId, setArmedDeleteCharId] = useState<string | null>(null);
   const [armedDeleteSceneId, setArmedDeleteSceneId] = useState<string | null>(null);
   const deleteHoldTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -422,41 +418,6 @@ export default function App() {
   };
 
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isVideoHelpOpen, setIsVideoHelpOpen] = useState(false);
-  const [isVideoAdminOpen, setIsVideoAdminOpen] = useState(false);
-  const [refreshVideoTrigger, setRefreshVideoTrigger] = useState(0);
-  const videoClicksRef = useRef<number[]>([]);
-  const videoTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleVideoIconClick = () => {
-    const now = Date.now();
-    const recentClicks = [...videoClicksRef.current.filter((t) => now - t < 3000), now];
-    videoClicksRef.current = recentClicks;
-
-    if (recentClicks.length >= 5) {
-      if (videoTimerRef.current) {
-        clearTimeout(videoTimerRef.current);
-        videoTimerRef.current = null;
-      }
-      videoClicksRef.current = [];
-      setIsVideoHelpOpen(false);
-      setIsVideoAdminOpen(true);
-      return;
-    }
-
-    if (!isVideoHelpOpen && !isVideoAdminOpen) {
-      if (videoTimerRef.current) {
-        clearTimeout(videoTimerRef.current);
-      }
-      videoTimerRef.current = setTimeout(() => {
-        if (videoClicksRef.current.length < 5) {
-          setIsVideoHelpOpen(true);
-        }
-        videoTimerRef.current = null;
-      }, 350);
-    }
-  };
   const [recordings, setRecordings] = useState<Record<number, string>>({});
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
   const [editingBackground, setEditingBackground] = useState<{ name: string; url: string; shapes?: Shape[] } | null>(null);
@@ -1551,7 +1512,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "project.sjr";
+    a.download = "project.ljr";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1647,12 +1608,11 @@ export default function App() {
       <header className="bg-white h-16 flex items-center justify-between z-20 relative px-6 shadow-sm border-b border-[#e5dfd3]">
         {/* Left section: Logo */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2.5 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
-              <img src={getAssetUrl("/UI/codejr_icon_1.png")} alt="CodeJR Logo" className="w-full h-full object-cover" />
-            </div>
-            <h1 className="text-xl font-black text-gray-800 tracking-tight">CODEJR</h1>
-          </div>
+          <img
+            src={new URL('../logiblox-jr.svg', import.meta.url).href}
+            alt="LogiBlox Jr"
+            className="h-12 w-auto max-w-[204px] object-contain"
+          />
         </div>
         
         {/* Center section: Green Flag, Stop | Separator | Add Text, Grid, Reset, Fullscreen, Background */}
@@ -1769,7 +1729,7 @@ export default function App() {
               <FolderOpen className="w-[36px] h-[36px] text-green-600 stroke-[2.2]" />
               <input 
                 type="file" 
-                accept=".sjr" 
+                accept=".ljr,.sjr"
                 onChange={handleLoadProject} 
                 className="hidden" 
               />
@@ -1777,49 +1737,6 @@ export default function App() {
           </div>
         </div>
         
-        {/* Right section: Video Help, Contact, Cards, Menu */}
-        <div className="flex items-center justify-end gap-1.5 shrink-0">
-          <button
-            onClick={handleVideoIconClick}
-            className="w-[56px] h-[56px] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer relative group"
-            title="Video Tutorials & Help (מדריכי וידאו)"
-          >
-            <div className="w-[42px] h-[42px] bg-gradient-to-tr from-amber-500 to-orange-400 hover:from-amber-600 hover:to-orange-500 rounded-2xl flex items-center justify-center shadow-md border-2 border-white transition-all group-hover:shadow-lg">
-              <Video className="w-5 h-5 text-white stroke-[2.5]" />
-            </div>
-            <span className="absolute -bottom-1 -right-0.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full border border-white uppercase animate-pulse">
-              NEW
-            </span>
-          </button>
-
-          <button
-            onClick={() => setIsContactModalOpen(true)}
-            className="w-[56px] h-[56px] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-            title="Contact Us"
-          >
-            <img src={getAssetUrl('/UI/mail.svg')} alt="Contact Us" className="w-[38px] h-[38px] object-contain pointer-events-none" />
-          </button>
-
-          <a
-            href="https://moshe310.wixsite.com/codejrenglish"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-[56px] h-[56px] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-            title="Instruction Cards"
-          >
-            <img src={getAssetUrl('/UI/card.svg')} alt="Instruction Cards" className="w-[38px] h-[38px] object-contain pointer-events-none" />
-          </a>
-
-          <div className="w-px h-8 bg-gray-300 mx-1"></div>
-
-          <button
-            onClick={() => setIsMenuDrawerOpen(true)}
-            className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 hover:scale-105 border border-orange-300/40"
-            title="Coding Sites"
-          >
-            <Globe className="w-5 h-5" />
-          </button>
-        </div>
       </header>
 
       {/* Main Content */}
@@ -2351,111 +2268,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Slide-out / Popover Menu Panel */}
-      {isMenuDrawerOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-start justify-end p-4 pt-16">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsMenuDrawerOpen(false)}
-          />
-          
-          {/* Drawer Panel */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -8 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-80 max-w-[90vw] h-fit bg-white rounded-2xl shadow-2xl flex flex-col z-10 p-4 border border-gray-100"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 shrink-0">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <h2 className="text-base font-bold text-gray-800">Coding Sites</h2>
-              </div>
-              <button 
-                onClick={() => setIsMenuDrawerOpen(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700 shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3.5">
-              {/* CodeKidi */}
-              <div>
-                <p className="text-xs font-semibold text-orange-600 mb-1 text-left">
-                  For kids who master ScratchJr
-                </p>
-                <a 
-                  href="https://codekidi.org/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3.5 p-3 rounded-xl bg-orange-50 hover:bg-orange-100/80 border border-orange-200 transition-all group shadow-xs hover:shadow-sm"
-                >
-                  <div className="w-20 h-20 bg-white rounded-xl shadow-xs flex items-center justify-center p-2 shrink-0 border border-orange-100 group-hover:scale-105 transition-transform">
-                    <img src={getAssetUrl("/UI/codekidi.png")} alt="CodeKidi" className="w-full h-full object-contain" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-gray-900 text-base group-hover:text-orange-600 transition-colors">CodeKidi</span>
-                      <ExternalLink className="w-4 h-4 text-orange-400 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                    <span className="text-xs text-gray-500 block truncate mt-1">codekidi.org</span>
-                  </div>
-                </a>
-              </div>
-
-              {/* StackKidi */}
-              <div>
-                <p className="text-xs font-semibold text-blue-600 mb-1 text-left">
-                  ScratchJr equivalent with vertical coding
-                </p>
-                <a 
-                  href="https://stackkidi.org/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3.5 p-3 rounded-xl bg-blue-50 hover:bg-blue-100/80 border border-blue-200 transition-all group shadow-xs hover:shadow-sm"
-                >
-                  <div className="w-20 h-20 bg-white rounded-xl shadow-xs flex items-center justify-center p-2 shrink-0 border border-blue-100 group-hover:scale-105 transition-transform">
-                    <img src={getAssetUrl("/UI/stackkidi.png")} alt="StackKidi" className="w-full h-full object-contain" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-gray-900 text-base group-hover:text-blue-600 transition-colors">StackKidi</span>
-                      <ExternalLink className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                    <span className="text-xs text-gray-500 block truncate mt-1">stackkidi.org</span>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-      {/* Contact Modal */}
-      <ContactModal 
-        isOpen={isContactModalOpen} 
-        onClose={() => setIsContactModalOpen(false)} 
-      />
-      {/* Video Help Modal */}
-      <VideoHelpModal
-        isOpen={isVideoHelpOpen}
-        onClose={() => setIsVideoHelpOpen(false)}
-        refreshTrigger={refreshVideoTrigger}
-        onOpenAdmin={() => {
-          setIsVideoHelpOpen(false);
-          setIsVideoAdminOpen(true);
-        }}
-      />
-      {/* Video Admin Modal */}
-      <VideoAdminModal
-        isOpen={isVideoAdminOpen}
-        onClose={() => setIsVideoAdminOpen(false)}
-        onVideosUpdated={() => setRefreshVideoTrigger((prev) => prev + 1)}
-      />
     </div>
   );
 }
