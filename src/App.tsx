@@ -22,7 +22,6 @@ import { DragState } from './dragState';
 import { detachBlock, attachBlock, cloneBlocks, sanitizeStacks } from './workspaceUtils';
 import { getAssetUrl } from './utils/assets';
 import { playSoundEffect } from './utils/soundEffects';
-import { trackPageVisit, trackGreenFlagRun, trackProjectSave } from './lib/analytics';
 
 const INITIAL_SPRITE_STATE = {
   x: 11,
@@ -58,7 +57,7 @@ export default function App() {
     { 
       id: 'scene-1', 
       characters: [
-        { id: 'char-1', name: 'Panda', spriteUrl: getAssetUrl('/sprites/pandamain.svg') }
+        { id: 'char-1', name: 'Logi', spriteUrl: getAssetUrl('/sprites/logi.png') }
       ],
       spriteStates: {
         'char-1': INITIAL_SPRITE_STATE
@@ -80,9 +79,6 @@ export default function App() {
     scenesRef.current = scenes;
   }, [scenes]);
 
-  useEffect(() => {
-    trackPageVisit();
-  }, []);
   const [activeSceneId, setActiveSceneId] = useState('scene-1');
   const [isBackgroundGalleryOpen, setIsBackgroundGalleryOpen] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -962,7 +958,7 @@ export default function App() {
   const handleAddScene = () => {
     const newSceneId = `scene-${Date.now()}`;
     const defaultCharId = `char-${Date.now()}`;
-    const defaultChar = { id: defaultCharId, name: 'Tick', spriteUrl: getAssetUrl('/sprites/cat1.svg') };
+    const defaultChar = { id: defaultCharId, name: 'Logi', spriteUrl: getAssetUrl('/sprites/logi.png') };
     
     updateScenes([...scenes, { 
       id: newSceneId, 
@@ -1499,7 +1495,6 @@ export default function App() {
   };
 
   const handleSaveProject = () => {
-    trackProjectSave();
     const projectData = {
       format: "scratchjr-web",
       version: 1,
@@ -1516,7 +1511,8 @@ export default function App() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Keep the object URL alive until the browser has started the download.
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const handleLoadProject = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1563,7 +1559,6 @@ export default function App() {
   };
 
   const playScene = () => {
-    trackGreenFlagRun();
     shouldStopRef.current = false;
     stoppedCharactersRef.current.clear();
     const activeScene = scenes.find(s => s.id === activeSceneId) || scenes[0];

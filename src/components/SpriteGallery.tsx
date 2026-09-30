@@ -18,6 +18,7 @@ interface SpriteItem {
 }
 
 const BUILTIN_SPRITES: SpriteItem[] = [
+  { id: "logi", name: "Logi", file: "logi.png" },
   { id: "Aeroplane", name: "Aeroplane", file: "Aeroplane.svg" },
   { id: "Apple", name: "Apple", file: "Apple.svg" },
   { id: "Astronaut", name: "Astronaut", file: "Astronaut.svg" },

@@ -1,8 +1,0 @@
- {
-  "name": "CODEJR KIDI",
-  "description": "Looking for an advanced Scratch Jr alternative? Discover CodeJr! Designed for 1st–4th graders, it’s an intuitive programming environment packed with upgraded features to easily create games, animations, and interactive stories.",
-  "requestFramePermissions": ["camera", "microphone"],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
