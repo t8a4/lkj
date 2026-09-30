@@ -1494,7 +1494,7 @@ export default function App() {
     });
   };
 
-  const handleSaveProject = () => {
+  const handleSaveProject = async () => {
     const projectData = {
       format: "scratchjr-web",
       version: 1,
@@ -1504,6 +1504,23 @@ export default function App() {
     };
     
     const blob = new Blob([JSON.stringify(projectData)], { type: "application/json" });
+    // On browsers that support it, write to the file chosen by the user. This
+    // avoids download security warnings for the custom .ljr extension.
+    if (typeof (window as any).showSaveFilePicker === "function") {
+      try {
+        const fileHandle = await (window as any).showSaveFilePicker({
+          suggestedName: "project.ljr",
+          types: [{ description: "Logiblox JR project", accept: { "application/json": [".ljr"] } }],
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.warn("Could not save with the file picker; using a download instead.", error);
+      }
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
